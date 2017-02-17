@@ -1,5 +1,6 @@
 package com.example.eggtimer;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.design.widget.FloatingActionButton;
@@ -25,13 +26,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void buttonClicked(View view) {
         Button myButton = (Button) findViewById(R.id.myButton);
-        new CountDownTimer(timeout * 1000, 1000) {
+        new CountDownTimer(timeout * 1000 + 100, 1000) {
             public void onTick(long millisUntilFinished) {
                 setRemainingTime((int) (millisUntilFinished / 1000));
             }
 
             public void onFinish() {
-                myTextView.setText("done!");
+                myTextView.setText("00:00");
+                MediaPlayer mplayer = MediaPlayer.create(getApplicationContext(), R.raw.airhorn);
+                mplayer.start();
             }
         }.start();
 
