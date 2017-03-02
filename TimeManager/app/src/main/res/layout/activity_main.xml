@@ -29,6 +29,13 @@
         android:textSize="36sp"
         android:textAlignment="center" />
 
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="112dp"
+        android:layout_marginBottom="80dp"
+        android:id="@+id/timeListView" />
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/startFab"
         android:layout_width="75dp"
@@ -47,4 +54,6 @@
         app:srcCompat="@android:drawable/ic_media_pause"
         app:backgroundTint="@android:color/transparent"
         android:clickable="true" />
+
+
 </android.support.design.widget.CoordinatorLayout>

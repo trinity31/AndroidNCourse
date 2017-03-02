@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     
     long startTime, stopTime;
 	private Calendar cl;
-	
+
     Handler mHandler = new Handler()
     {
         @Override
@@ -83,21 +83,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 	private void timerStarted(long startTime) {
+        //int start_time;
+
         cl.setTimeInMillis(startTime);
         String date = "" + cl.get(Calendar.DAY_OF_MONTH) + ":" + cl.get(Calendar.MONTH) + ":" + cl.get(Calendar.YEAR);
         String time = "" + cl.get(Calendar.HOUR_OF_DAY) + ":" + cl.get(Calendar.MINUTE) + ":" + cl.get(Calendar.SECOND);
-        Log.i(TAG, "Start: " + date + ", " + time);
-					
-        myDatabase.execSQL("INSERT INTO times (name, start, end) VALUES ('test', " +  Long.toString(startTime) +",-1)");
+        Log.i(TAG, "Start: " + startTime + "/" + date + ", " + time);
+
+       // start_time = (int) startTime / 1000;
+		
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date start_time = new Date(startTime);
+		//Log.i(TAG, "Start: " + dateFormat.format(start_time));
+        myDatabase.execSQL("INSERT INTO time (name, start, end) VALUES ('test', '" +  dateFormat.format(start_time) +"', NULL)");
 	}
 	
 	private void timerStopped(long stopTime) {
+        //int stop_time;
         cl.setTimeInMillis(stopTime);
         String date = "" + cl.get(Calendar.DAY_OF_MONTH) + ":" + cl.get(Calendar.MONTH) + ":" + cl.get(Calendar.YEAR);
         String time = "" + cl.get(Calendar.HOUR_OF_DAY) + ":" + cl.get(Calendar.MINUTE) + ":" + cl.get(Calendar.SECOND);
         Log.i(TAG, "Stop: " + date + ", " + time);
-		
-        myDatabase.execSQL("UPDATE times SET end=" + Long.toString(stopTime) + " WHERE name = 'test'");
+
+       // stop_time = (int) stopTime / 1000;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date stop_time = new Date(stopTime);
+       myDatabase.execSQL("UPDATE time SET end='" + dateFormat.format(stopTime) + "'" + " WHERE name = 'test'");
 	}
 	
     public void onClick(View v) {
@@ -132,12 +143,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             myDatabase = this.openOrCreateDatabase("Times", MODE_PRIVATE, null);
 
-            myDatabase.execSQL("CREATE TABLE IF NOT EXISTS times (name VARCHAR, start INTEGER, end INTEGER)");
+            myDatabase.execSQL("CREATE TABLE IF NOT EXISTS time (name VARCHAR, start DATETIME, end DATETIME)");
 
             //myDatabase.execSQL("INSERT INTO times (name, age) VALUES ('Rob', '34')");
            // myDatabase.execSQL("INSERT INTO times (name, age) VALUES ('Trinity', '37')");
 
-            Cursor c = myDatabase.rawQuery("SELECT * FROM times", null);
+            Cursor c = myDatabase.rawQuery("SELECT * FROM time", null);
             int nameIndex = c.getColumnIndex("name");
             int startIndex = c.getColumnIndex("start");
             int endIndex = c.getColumnIndex("end");
@@ -145,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             while(c != null) {
                 Log.i(TAG, "name: " + c.getString(nameIndex) + ", start: " +
-                        Integer.toString(c.getInt(startIndex)) + ", end: " + Integer.toString(c.getInt(endIndex)));
+                        c.getString(startIndex) + ", end: " + (c.getString(endIndex)));
                 c.moveToNext();
             }
 
