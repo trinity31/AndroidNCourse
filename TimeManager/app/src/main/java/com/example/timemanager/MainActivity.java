@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.text.DateFormat;
@@ -37,6 +39,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     
     long startTime, stopTime;
 	private Calendar cl;
+    private Date start_time, stop_time, total_time;
+    private EditText nameText;
+    String currentName;
 
     Handler mHandler = new Handler()
     {
@@ -91,11 +96,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.i(TAG, "Start: " + startTime + "/" + date + ", " + time);
 
        // start_time = (int) startTime / 1000;
-		
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date start_time = new Date(startTime);
+        currentName = nameText.getText().toString();
+
+		//SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+
+        //Date start_time = new Date(startTime);
+        start_time.setTime(startTime);
 		//Log.i(TAG, "Start: " + dateFormat.format(start_time));
-        myDatabase.execSQL("INSERT INTO time (name, start, end) VALUES ('test', '" +  dateFormat.format(start_time) +"', NULL)");
+
+        //INSERT INTO time (name, date, start, stop, total) VALUES ('test', '2017-03-03', '15:10:10', NULL,NULL)
+        myDatabase.execSQL("INSERT INTO time (name, date, start, stop, total) VALUES ('"+
+                currentName +"', '" +  dateFormat.format(start_time) +"', '" + timeFormat.format(start_time) + "', NULL, NULL)");
 	}
 	
 	private void timerStopped(long stopTime) {
@@ -106,9 +119,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.i(TAG, "Stop: " + date + ", " + time);
 
        // stop_time = (int) stopTime / 1000;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date stop_time = new Date(stopTime);
-       myDatabase.execSQL("UPDATE time SET end='" + dateFormat.format(stopTime) + "'" + " WHERE name = 'test'");
+        //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+
+        //Date stop_time = new Date(stopTime);
+        stop_time.setTime(stopTime);
+        total_time.setTime(stop_time.getTime() - start_time.getTime());
+        int offset = cl.getTimeZone().getOffset(total_time.getTime());
+        total_time.setTime(total_time.getTime() - offset);
+
+        Log.i(TAG, "Date: " + dateFormat.format(stop_time));
+        Log.i(TAG, "Start time: " + timeFormat.format(start_time));
+        Log.i(TAG, "Stop time: " + timeFormat.format(stop_time));
+        Log.i(TAG, "Total time: " + timeFormat.format(total_time.getTime()));
+
+       myDatabase.execSQL("UPDATE time SET stop='" + timeFormat.format(stopTime) + "', total='" +  timeFormat.format(total_time) +
+                            "' WHERE name = '" + currentName + "'");
+
+        nameText.setText("");
 	}
 	
     public void onClick(View v) {
@@ -129,8 +159,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);*/
 
         timerView = (TextView)findViewById(R.id.timerView);
         btnStart = (FloatingActionButton)findViewById(R.id.startFab);
@@ -139,26 +169,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnStop.setOnClickListener(this);
 
         cl = Calendar.getInstance(TimeZone.getDefault());
+        nameText = (EditText)findViewById(R.id.nameText);
+
+        start_time = new Date();
+        stop_time = new Date();
+        total_time = new Date();
 
         try {
             myDatabase = this.openOrCreateDatabase("Times", MODE_PRIVATE, null);
-
-            myDatabase.execSQL("CREATE TABLE IF NOT EXISTS time (name VARCHAR, start DATETIME, end DATETIME)");
-
-            //myDatabase.execSQL("INSERT INTO times (name, age) VALUES ('Rob', '34')");
-           // myDatabase.execSQL("INSERT INTO times (name, age) VALUES ('Trinity', '37')");
+            myDatabase.execSQL("CREATE TABLE IF NOT EXISTS time (_id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, date DATETIME, start DATETIME, stop DATETIME, total DATETIME)");
 
             Cursor c = myDatabase.rawQuery("SELECT * FROM time", null);
-            int nameIndex = c.getColumnIndex("name");
+
+            ListView lvTimes = (ListView) findViewById(R.id.timeListView);
+            TimeCursorAdapter timeAdapter = new TimeCursorAdapter(this, c);
+            lvTimes.setAdapter(timeAdapter);
+
+/*            int nameIndex = c.getColumnIndex("name");
             int startIndex = c.getColumnIndex("start");
-            int endIndex = c.getColumnIndex("end");
+            int endIndex = c.getColumnIndex("stop");
             c.moveToFirst();
 
             while(c != null) {
                 Log.i(TAG, "name: " + c.getString(nameIndex) + ", start: " +
-                        c.getString(startIndex) + ", end: " + (c.getString(endIndex)));
+                        c.getString(startIndex) + ", stop: " + (c.getString(endIndex)));
                 c.moveToNext();
-            }
+            }*/
 
         } catch(Exception e) {
             e.printStackTrace();
