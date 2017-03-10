@@ -15,12 +15,15 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -40,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     long startTime, stopTime;
 	private Calendar cl;
     private Date start_time, stop_time, total_time;
-    private EditText nameText;
+    private AutoCompleteTextView nameText;
     String currentName;
 
     Handler mHandler = new Handler()
@@ -169,11 +172,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnStop.setOnClickListener(this);
 
         cl = Calendar.getInstance(TimeZone.getDefault());
-        nameText = (EditText)findViewById(R.id.nameText);
+        nameText = (AutoCompleteTextView)findViewById(R.id.nameText);
 
         start_time = new Date();
         stop_time = new Date();
         total_time = new Date();
+
+        final ArrayList<String> taskNames = new ArrayList<String>();
 
         try {
             myDatabase = this.openOrCreateDatabase("Times", MODE_PRIVATE, null);
@@ -185,20 +190,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             TimeCursorAdapter timeAdapter = new TimeCursorAdapter(this, c);
             lvTimes.setAdapter(timeAdapter);
 
-/*            int nameIndex = c.getColumnIndex("name");
-            int startIndex = c.getColumnIndex("start");
-            int endIndex = c.getColumnIndex("stop");
+            c = myDatabase.rawQuery("SELECT * FROM time", null);
+            int nameIndex = c.getColumnIndex("name");
             c.moveToFirst();
 
             while(c != null) {
-                Log.i(TAG, "name: " + c.getString(nameIndex) + ", start: " +
-                        c.getString(startIndex) + ", stop: " + (c.getString(endIndex)));
+                Log.i(TAG, "nameIndex: " + c.getString(nameIndex));
+                taskNames.add(c.getString(nameIndex));
                 c.moveToNext();
-            }*/
-
+            }
         } catch(Exception e) {
             e.printStackTrace();
+        } finally {
+            ArrayAdapter<String> nameArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, taskNames);
+            nameText.setAdapter(nameArrayAdapter);
         }
+
     }
 
     @Override
